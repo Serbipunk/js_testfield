@@ -9,109 +9,72 @@ context.fillRect(0, 0, canvas.width, canvas.height);
 let draw_color = "black";
 let draw_width = "2";
 let is_drawing = false;
+let is_shape_new_created = true;
 
-let restore_array = [];
-let index = -1;
+canvas.addEventListener("mousedown", mousedown, false);
+canvas.addEventListener("mousemove", mousemove, false);
+canvas.addEventListener("mouseup", mouseup, false);
+canvas.addEventListener("dblclick", finish_this_shape, false);
 
-canvas.addEventListener("touchstart", start, false);
-canvas.addEventListener("touchmove", draw, false);
-canvas.addEventListener("touchend", stop, false);
-
-canvas.addEventListener("mousedown", start, false);
-canvas.addEventListener("mousemove", draw, false);
-canvas.addEventListener("mouseup", stop, false);
-
-let shapes_list = []
 let linestrip_obj_proto = {
     "shape_type": "linestrip",
     "points": [],
 }
-shapes_list.push( Object.assign({}, linestrip_obj_proto) );
+let linestrip_obj_proto_str = JSON.stringify(linestrip_obj_proto);
 
-let first_point = [0, 0];
-let second_point = [0, 0];
+let shapes_list = []
 
-context.beginPath();
-
-context.lineWidth = 5;
-context.strokeStyle = "black";
-
-
-// context.closePath();
-let last_canvas_list = [];
-last_canvas_list.push(context.getImageData(0, 0, canvas.width, canvas.height));
-
-context.moveTo(100, 100);
-context.lineTo(300, 100);
-
-context.stroke()
-context.clothPath();
-
-context.putImageData(last_canvas_list[0], 0, 0);
-
-function start(event) {
+function mousedown(event) {
     is_drawing = true;
 
-    // context.beginPath();
-    // context.moveTo(event.clientX - canvas.offsetLeft,
-    //                event.clientY - canvas.offsetTop);
-    // event.preventDefault();  // prevent scrolling                   
-    
-    first_point[0] = event.clientX - canvas.offsetLeft;
-    first_point[1] = event.clientY - canvas.offsetTop;
-    context.moveTo(first_point[0], first_point[1]);
-    // context.save();
-    last_canvas_list.push(context.getImageData(0, 0, canvas.width, canvas.height));
+    let x = event.clientX - canvas.offsetLeft;
+    let y = event.clientY - canvas.offsetTop;
 
+    if(is_shape_new_created) {
+        // shapes_list.push( Object.assign({}, linestrip_obj_proto) );  // cannot deep copy [] in linestrip_obj_proto, so this deep-copy is wrong
+        shapes_list.push( JSON.parse(linestrip_obj_proto_str) );
+        // console.log("len = ", shapes_list.length)
+        // shapes_list.forEach((shape_obj, index) => {
+        //     console.log("# ", index, "  len=", shape_obj.points.length);
+        // });
+        shapes_list[shapes_list.length-1].points.push([x, y]);
+    }
+    is_shape_new_created = false;
 }
 
-function draw(event) {
-    // if (is_drawing) {
-    //     context.lineTo(event.clientX - canvas.offsetLeft,
-    //                    event.clientY - canvas.offsetTop);
-    //     context.strokeStyle = draw_color;
-    //     context.lineWidth = draw_width;
-    //     context.lineCap = "round";
-    //     context.lineJoin = "round";
-    //     context.stroke();
-    // }
+function mousemove(event) {
     if(is_drawing) {
         let x_ = event.clientX - canvas.offsetLeft;
         let y_ = event.clientY - canvas.offsetTop;
 
-        // context.putImageData(last_canvas_list[0], 0, 0);
         clear_canvas();
 
-        context.beginPath();
-        context.moveTo(first_point[0], first_point[1]);
-        context.lineTo(x_, y_);
-        context.stroke();
-        context.closePath();
+        draw_shapes(x_, y_);
     }
 }
 
-function stop(event) {
-    // if( is_drawing ) {
-    //     context.stroke();
-    //     context.closePath();
-    //     is_drawing = false;
-    // }
-    // event.preventDefault();
-    
-    // if (event.type != 'mouseout') {
-    //     restore_array.push(context.getImageData(0, 0, canvas.width, canvas.height));
-    //     index += 1;
-    // }
-    // console.log(restore_array);
-    second_point[0] = event.clientX - canvas.offsetLeft;
-    second_point[1] = event.clientY - canvas.offsetTop;
+function mouseup(event) {
+    let x = event.clientX - canvas.offsetLeft;
+    let y = event.clientY - canvas.offsetTop;
 
+    i_pts_len = shapes_list[shapes_list.length - 1].points.length;
+    if (x != shapes_list[shapes_list.length - 1].points[i_pts_len - 1][0] || 
+        y != shapes_list[shapes_list.length - 1].points[i_pts_len - 1][1]) {
+        shapes_list[shapes_list.length - 1].points.push([x, y]);
+    }
 
-    // context.lineTo(second_point[0], second_point[1]);
-    // context.stroke();
+    draw_shapes();
+}
 
+function finish_this_shape(event) {
+    if (is_drawing == true) {
+        is_drawing = false;
+        let i_shape = shapes_list.length - 1;
+        shapes_list[i_shape].points.push(shapes_list[i_shape].points[0]);
 
-    is_drawing = false;
+        is_shape_new_created = true;
+        draw_shapes();
+    }
 }
 
 function change_color(element) {
@@ -127,13 +90,36 @@ function clear_canvas() {
     index = -1;
 }
 
+function draw_shapes(x_temp=null, y_temp=null) {
+    clear_canvas();
+
+    context.beginPath();
+    context.strokeStyle = draw_color;
+    context.lineWidth = draw_width;
+
+    for(let i_shape=0; i_shape<shapes_list.length; i_shape++) {
+        let shape = shapes_list[i_shape];
+        if(shape.shape_type == "linestrip") {
+            let points = shape.points;
+
+            context.moveTo(points[0][0], points[0][1]);
+            for(let i_point=0; i_point<points.length; i_point++) {
+                if (i_point>0) {
+                    context.lineTo(points[i_point][0], points[i_point][1]);
+                }
+                if(x_temp != null && y_temp != null && i_shape == shapes_list.length - 1) {
+                    if(i_point == points.length - 1) {
+                        context.lineTo(x_temp, y_temp);
+                    }
+                }
+            }
+
+        }
+    }
+    context.stroke();
+    context.closePath();
+}
+
 function undo_last() {
-    if(index <= 0) {
-        clear_canvas();
-    }
-    else {
-        index -= 1;
-        restore_array.pop();
-        context.putImageData(restore_array[index], 0, 0);
-    }
+    throw new Error("Not implemented yet");
 }
