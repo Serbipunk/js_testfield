@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>BCoding | canvas</title>
+        <!-- <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon"/> -->
+        <link rel="stylesheet" href="style.css">
+        <!-- <script src="main.js"></script> -->
+        <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+    </head>
+
+    <body>
+
+        <div class="field">
+            <canvas id="canvas"></canvas>
+            <div class="tools">
+                <button type="button" class="button" onClick="undo_last()" >Undo</button>
+                <button type="button" class="button" onClick="clear_canvas()">Clear</button>
+
+                <div onClick="change_color(this)" class="color-field" style="background: red"></div>
+                <div onClick="change_color(this)" class="color-field" style="background: blue"></div>
+                <div onClick="change_color(this)" class="color-field" style="background: green"></div>
+                <div onClick="change_color(this)" class="color-field" style="background: yellow"></div>
+
+                <!-- built color picker ! -->
+                <!-- <input type="color"> -->
+                <input onInput="draw_color = this.value" type="color" class="color-picker">  
+                <!-- <input type="range">  -->
+                <input onInput="draw_width = this.value" type="range" min="1" max="100" class="pen-range">
+            </div>
+        </div>
+
+    </body>
+
+    <script src="main.js"></script>
+</html>
