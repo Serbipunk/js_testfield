@@ -3,9 +3,10 @@ var animalContainer = document.getElementById("animal-info");
 var btn = document.getElementById("btn");
 btn.addEventListener("click", function() {  // anonymous function
     var ourRequest = new XMLHttpRequest();
+    // open(method, url, async=true, user, password)
     ourRequest.open("GET", "https://learnwebcode.github.io/json-example/animals-1.json");
 
-    ourRequest.onload = function() {
+    ourRequest.onload = function() {  // the aync call-back function
         // console.log(ourRequest.responseText);
         // var ourData = ourRequest.responseText;
         var ourData = ourRequest.responseText;
